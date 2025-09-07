@@ -191,14 +191,14 @@ const playerEnt = noa.playerEntity;
 noa.ents.setPosition(playerEnt, [0, 50, 0]);
 
 
-const music = new Audio("OMORI OST - 005 By Your Side.mp3");
+//const music = new Audio("OMORI OST - 005 By Your Side.mp3");
 
 // Make it loop forever
-music.loop = true;
+//music.loop = true;
 
-document.addEventListener("click", () => {
-    music.play();
-});
+//document.addEventListener("click", () => {
+//    music.play();
+//});
 
 
 var scene = noa.rendering.getScene();
