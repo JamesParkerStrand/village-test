@@ -68,12 +68,22 @@ async function loadRGBMap(src) {
 }
 
 var pixelMap = [];
+var doorMap = [];
 
 // Example usage
 (async () => {
     try {
         pixelMap = await loadRGBMap("town map.png");
         //console.log("Pixel RGB map:", pixelMap);
+    } catch (err) {
+        console.error("Error loading RGB map:", err);
+    }
+})();
+
+(async () => {
+    try {
+        doorMap = await loadRGBMap("doormap.png");
+        //console.log("Pixel RGB map:", doorMap);
     } catch (err) {
         console.error("Error loading RGB map:", err);
     }
@@ -91,15 +101,37 @@ var brownish = [0.45, 0.36, 0.22];
 var greenish = [0.1, 0.8, 0.2];
 var roof = [0,0,0];
 
-noa.registry.registerMaterial('dirt', { color: brownish });
-noa.registry.registerMaterial('grass', { color: greenish });
-noa.registry.registerMaterial('blackRoof', { color: roof });
+noa.registry.registerMaterial('smoothStone', {textureURL:  "../blocktextures/Smooth_Stone.png"});
+noa.registry.registerMaterial('brick', { textureURL: "../blocktextures/Bricks.png"});
+noa.registry.registerMaterial("plank", {textureURL: "../blocktextures/Oak_Planks.png"});
+noa.registry.registerMaterial("endStone", {textureURL: "../blocktextures/End_Stone_Bricks.png"});
+noa.registry.registerMaterial("deepslateBrick", {textureURL: "../blocktextures/Deepslate_Bricks.png"});
+noa.registry.registerMaterial("quartz", {textureURL: "../blocktextures/Quartz_Bricks.png"});
+noa.registry.registerMaterial("stoneBricks", {textureURL: "../blocktextures/Stone_Bricks.png"});
+noa.registry.registerMaterial("mudBricks", {textureURL: "../blocktextures/mud_Bricks.png"});
+noa.registry.registerMaterial("purpur", {textureURL: "../blocktextures/Purpur_Block.png"});
+noa.registry.registerMaterial('blackRoof', { textureURL: "../blocktextures/Nether_Bricks.png"});
+noa.registry.registerMaterial('grass', { textureURL: "../blocktextures/Grass_Block.png"});
+noa.registry.registerMaterial('sprucebottom', { textureURL: "../blocktextures/Spruce_Door_bottom.png"});
+noa.registry.registerMaterial('sprucetop', { textureURL: "../blocktextures/Spruce_Door_top.png"});
+
+//
 
 
 // block types and their material names
-var dirtID = noa.registry.registerBlock(1, { material: 'dirt' });
-var grassID = noa.registry.registerBlock(2, { material: 'grass' });
-var roofID = noa.registry.registerBlock(3, { material: 'blackRoof' });
+noa.registry.registerBlock(1, { material: 'plank' });
+noa.registry.registerBlock(2, { material: 'brick' });
+noa.registry.registerBlock(3, { material: 'endStone' });
+noa.registry.registerBlock(4, { material: 'deepslateBrick' });
+noa.registry.registerBlock(5, { material: 'quartz' });
+noa.registry.registerBlock(6, { material: 'stoneBricks' });
+noa.registry.registerBlock(7, { material: 'mudBricks' });
+noa.registry.registerBlock(8, { material: 'purpur' });
+noa.registry.registerBlock(9, { material: 'blackRoof' });
+noa.registry.registerBlock(10, { material: 'grass' });
+noa.registry.registerBlock(11, { material: 'smoothStone' });
+noa.registry.registerBlock(12, { material: 'sprucebottom' });
+noa.registry.registerBlock(13, { material: 'sprucetop' });
 
 noa.world.on('worldDataNeeded', function (id, data, x, y, z) {
 
@@ -118,24 +150,32 @@ noa.world.on('worldDataNeeded', function (id, data, x, y, z) {
                     var r = pixelMap[wx][wz][0];
                     var g = pixelMap[wx][wz][1];
                     var b = pixelMap[wx][wz][2];
+
+                    var g2 = doorMap[wx][wz][1];
+
                     if(r==127 && g == 127 && b==127) {
-                        data.set(i,0,j,2);
+                        data.set(i,0,j,11);
                         continue;
                     }
                     if(r < 3) {
-                        data.set(i,0,j,1);
+                        data.set(i,0,j,10);
                         continue;
                     }
                     var maxH = r - associatedRangeValue.get(r)[0];
 
                     for (var k = 0; k < 10+maxH; k++) {
                         if(k < 10) {
-                            data.set(i, k - y, j, 1);
+                            data.set(i, k - y, j, associatedIDValue.get(r));
                         }
                         else {
-                            data.set(i, k - y, j, 3);
+                            data.set(i, k - y, j, 9);
                         }
                 
+                    }
+                    if(g2 == 255) {
+                        data.set(i,1,j,12);
+                        data.set(i,2,j,13);
+                        continue;
                     }
                 }
 
@@ -150,7 +190,7 @@ const playerEnt = noa.playerEntity;
 // Set the player's position [x, y, z]
 noa.ents.setPosition(playerEnt, [0, 50, 0]);
 
-/*
+
 const music = new Audio("OMORI OST - 005 By Your Side.mp3");
 
 // Make it loop forever
@@ -159,7 +199,7 @@ music.loop = true;
 document.addEventListener("click", () => {
     music.play();
 });
-*/
+
 
 var scene = noa.rendering.getScene();
 
