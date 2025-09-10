@@ -1,5 +1,7 @@
 import { Engine } from 'noa-engine';
 import * as BABYLON from "@babylonjs/core";
+import "@babylonjs/loaders";
+import { SceneLoader } from "@babylonjs/core/Loading/sceneLoader";
 
 var associatedClass = new Map();
 
@@ -25,8 +27,6 @@ for (let i = 0; i < 160; i++) {
         }
     }
 }
-
-console.log(associatedRangeValue);
 
 async function loadRGBMap(src) {
     return new Promise((resolve, reject) => {
@@ -70,36 +70,33 @@ async function loadRGBMap(src) {
 var pixelMap = [];
 var doorMap = [];
 
-// Example usage
-(async () => {
+async function init() {
     try {
         pixelMap = await loadRGBMap("town map.png");
-        //console.log("Pixel RGB map:", pixelMap);
-    } catch (err) {
-        console.error("Error loading RGB map:", err);
-    }
-})();
-
-(async () => {
-    try {
         doorMap = await loadRGBMap("doormap.png");
-        //console.log("Pixel RGB map:", doorMap);
+
+        // safe to use doorMap here
     } catch (err) {
-        console.error("Error loading RGB map:", err);
+        console.error("Error loading maps:", err);
     }
-})();
+}
+   // wait for maps
 
-
+await init();
 
 var noa = new Engine({
-   debug: false,
-   showFPS: true,
-   chunkSize: 100,
-})
+    debug: false,
+    showFPS: true,
+    chunkSize: 100,
+});
 
-var brownish = [0.45, 0.36, 0.22];
-var greenish = [0.1, 0.8, 0.2];
-var roof = [0,0,0];
+var scene = noa.rendering.getScene();
+
+scene.clearColor = new BABYLON.Color3(0.949, 0.937, 0.239);
+scene.ambientColor = new BABYLON.Color3(1,1,1);
+noa.rendering.useAO = false;
+
+setWorld(noa);
 
 noa.registry.registerMaterial('smoothStone', {textureURL:  "../blocktextures/Smooth_Stone.png"});
 noa.registry.registerMaterial('brick', { textureURL: "../blocktextures/Bricks.png"});
@@ -115,9 +112,6 @@ noa.registry.registerMaterial('grass', { textureURL: "../blocktextures/Grass_Blo
 noa.registry.registerMaterial('sprucebottom', { textureURL: "../blocktextures/Spruce_Door_bottom.png"});
 noa.registry.registerMaterial('sprucetop', { textureURL: "../blocktextures/Spruce_Door_top.png"});
 
-//
-
-
 // block types and their material names
 noa.registry.registerBlock(1, { material: 'plank' });
 noa.registry.registerBlock(2, { material: 'brick' });
@@ -129,79 +123,112 @@ noa.registry.registerBlock(7, { material: 'mudBricks' });
 noa.registry.registerBlock(8, { material: 'purpur' });
 noa.registry.registerBlock(9, { material: 'blackRoof' });
 noa.registry.registerBlock(10, { material: 'grass' });
-noa.registry.registerBlock(11, { material: 'smoothStone' });
+noa.registry.registerBlock(11, { material: 'smoothStone'});
 noa.registry.registerBlock(12, { material: 'sprucebottom' });
 noa.registry.registerBlock(13, { material: 'sprucetop' });
 
-noa.world.on('worldDataNeeded', function (id, data, x, y, z) {
+function setWorld(noa) {
+    noa.world.on('worldDataNeeded', function (id, data, x, y, z) {
 
-    if(y < 50 && y>=0) {
-        for (var i = 0; i < data.shape[0]; i++) {
-            for (var j = 0; j < data.shape[2]; j++) {
-                // compute world coordinates
-                const wx = i + x
-                const wz = j + z
+        if(y < 50 && y>=0) {
+            for (var i = 0; i < data.shape[0]; i++) {
+                for (var j = 0; j < data.shape[2]; j++) {
+                    // compute world coordinates
+                    const wx = i + x
+                    const wz = j + z
 
-                // check bounds of heightMap
-                if (
-                    wx >= 0 && wx < pixelMap.length &&
-                    wz >= 0 && wz < pixelMap[0].length
-                )  {
-                    var r = pixelMap[wx][wz][0];
-                    var g = pixelMap[wx][wz][1];
-                    var b = pixelMap[wx][wz][2];
+                    // check bounds of heightMap
+                    if (
+                        wx >= 0 && wx < pixelMap.length &&
+                        wz >= 0 && wz < pixelMap[0].length
+                    )  {
+                        var r = pixelMap[wx][wz][0];
+                        var g = pixelMap[wx][wz][1];
+                        var b = pixelMap[wx][wz][2];
 
-                    var g2 = doorMap[wx][wz][1];
+                        var g2 = doorMap[wx][wz][1];
 
-                    if(r==127 && g == 127 && b==127) {
-                        data.set(i,0,j,11);
-                        continue;
-                    }
-                    if(r < 3) {
-                        data.set(i,0,j,10);
-                        continue;
-                    }
-                    var maxH = r - associatedRangeValue.get(r)[0];
-
-                    for (var k = 0; k < 10+maxH; k++) {
-                        if(k < 10) {
-                            data.set(i, k - y, j, associatedIDValue.get(r));
+                        if(r==127 && g == 127 && b==127) {
+                            data.set(i,0,j,11);
+                            continue;
                         }
-                        else {
-                            data.set(i, k - y, j, 9);
+                        if(r < 3) {
+                            data.set(i,0,j,10);
+                            continue;
                         }
-                
-                    }
-                    if(g2 == 255) {
-                        data.set(i,1,j,12);
-                        data.set(i,2,j,13);
-                        continue;
-                    }
-                }
+                        var maxH = r - associatedRangeValue.get(r)[0];
 
-    }
+                        for (var k = 0; k < 10+maxH; k++) {
+                            if(k < 10) {
+                                data.set(i, k - y, j, associatedIDValue.get(r));
+                            }
+                            else {
+                                data.set(i, k - y, j, 9);
+                            }
+                    
+                        }
+                        if(g2 == 255) {
+                            data.set(i,1,j,12);
+                            data.set(i,2,j,13);
+                            continue;
+                        }
+                    }
 
+        }
+
+        }
     }
+        noa.world.setChunkData(id, data); })
 }
-    noa.world.setChunkData(id, data); })
 
 const playerEnt = noa.playerEntity;
 
+var done = false;
+var allMeshes = null;
+while(done === false) {
+    var result = await SceneLoader.ImportMeshAsync(
+    "",                 // empty string = load all meshes
+    "/models/",          // folder path
+    "generic felari.obj",      // your obj filename
+    noa.rendering.getScene()
+);
+    allMeshes = result.meshes;
+    if(allMeshes != null) {
+        done = true;
+    }
+}
+
 // Set the player's position [x, y, z]
-noa.ents.setPosition(playerEnt, [0, 50, 0]);
+noa.ents.setPosition(playerEnt, [70, 50, 10]);
 
+var customMesh = BABYLON.Mesh.MergeMeshes(allMeshes, true, true, undefined, false, true);   // root mesh
 
-//const music = new Audio("OMORI OST - 005 By Your Side.mp3");
+customMesh.rotationQuaternion = null;  // allow Euler rotations
+customMesh.scaling.setAll(1); 
+customMesh.bakeCurrentTransformIntoVertices();
+customMesh.position.set(0, 0, 0); 
+
+const npcLight = new BABYLON.PointLight(
+    "npcLight",
+    new BABYLON.Vector3(3, 3, 3), // position near your NPC
+    scene
+);
+npcLight.intensity = 1;
+npcLight.range = 10;
+npcLight.parent = customMesh;
+
+var id = noa.entities.add(
+        [75,1,30], 0.6, 1.8, // required
+        customMesh, [0,0,0], false, true// optional
+    );
+
+    /*
+const music = new Audio("OMORI OST - 005 By Your Side.mp3");
 
 // Make it loop forever
-//music.loop = true;
+music.loop = true;
 
-//document.addEventListener("click", () => {
-//    music.play();
-//});
-
-
-var scene = noa.rendering.getScene();
-
-scene.clearColor = new BABYLON.Color3(0.949, 0.937, 0.239);
-scene.ambientColor = new BABYLON.Color3(1,1,1);
+document.addEventListener("click", () => {
+    music.play();
+});
+*/
