@@ -10,36 +10,29 @@ import { loadRGBMap } from './loadRGB.js';
 
 var associatedClass = new Map();
 
-associatedClass.set([3,15],1);
-associatedClass.set([16,30],2);
-associatedClass.set([31,51],3);
-associatedClass.set([52,71],4);
-associatedClass.set([72,91],5);
-associatedClass.set([92,111],6);
-associatedClass.set([112,131],7);
-associatedClass.set([132,152],8);
+associatedClass.set(255,1);
+associatedClass.set(254,2);
+associatedClass.set(253,3);
+associatedClass.set(252,4);
+associatedClass.set(251,5);
+associatedClass.set(250,6);
+associatedClass.set(249,7);
+associatedClass.set(248,8);
 
 // (intensity value, id)
 var associatedIDValue = new Map();
 // (intensity, range value)
 var associatedRangeValue = new Map();
 
-for (let i = 0; i < 160; i++) {
-    for (const key of associatedClass.keys()) {
-        if (i >= key[0] && i <= key[1]) {
-            associatedIDValue.set(i, associatedClass.get(key));
-            associatedRangeValue.set(i, [key[0], key[1]]);
-        }
-    }
-}
-
 var pixelMap = [];
 var doorMap = [];
+var roofMap = [];
 
 async function init() {
     try {
         pixelMap = await loadRGBMap("town map.png");
         doorMap = await loadRGBMap("doormap.png");
+        roofMap = await loadRGBMap("roof map.png");
 
         // safe to use doorMap here
     } catch (err) {
@@ -97,7 +90,7 @@ noa.registry.registerBlock(13, { material: 'sprucetop' });
 function setWorld(noa) {
     noa.world.on('worldDataNeeded', function (id, data, x, y, z) {
 
-        if(y < 50 && y>=0) {
+        if(y <= 50 && y>=0) {
             for (var i = 0; i < data.shape[0]; i++) {
                 for (var j = 0; j < data.shape[2]; j++) {
                     // compute world coordinates
@@ -123,11 +116,11 @@ function setWorld(noa) {
                             data.set(i,0,j,10);
                             continue;
                         }
-                        var maxH = r - associatedRangeValue.get(r)[0];
+                        var maxH = roofMap[wx][wz][0];
 
                         for (var k = 0; k < 10+maxH; k++) {
                             if(k < 10) {
-                                data.set(i, k - y, j, associatedIDValue.get(r));
+                                data.set(i, k - y, j, associatedClass.get(r));
                             }
                             else {
                                 data.set(i, k - y, j, 9);
@@ -165,8 +158,6 @@ npcLight.intensity = 1;
 npcLight.range = 20;
 npcLight.parent = Mesh;
 
-
-console.log(Mesh.material.disableLighting);
 // testing npc
 var citizen = noa.entities.add(
         [75,2,30], 0.6, 1.8, // required
@@ -250,6 +241,7 @@ advancedTexture.addControl(texts);
 sequence.set(0, ["Dave: Hey James, it's your best friend dave, how ya been?", [0,0,0], 0]);
 sequence.set(200, ["James (you): Having a splended day my friend.", [0,0,0], 0]);
 sequence.set(400, ["Dave: Well, glad your having a great day, follow me around", [0,0,3], 180]);
+sequence.set(3350, ["Dave: Alright, well stop here, and admire the sky!", [0,0,0], 0]);
 
 var text = "";
 var vel = [0,0,0];
@@ -265,12 +257,10 @@ function update(dt) {
     if(seq != null) {
         text = seq[0];
         vel = seq[1];
-        console.log(vel);
         rotation = seq[2];
         meshedCitizen.rotation.y = degToRad(rotation);
     }
     t += 1;
-    //console.log(t);
     if(animatedCitizen.velocity[0] <= vel[0] && animatedCitizen.velocity[2] <= vel[2]) {
         animatedCitizen.applyImpulse(vel);
     }
