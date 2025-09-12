@@ -12,6 +12,11 @@
     "vite": "^7.1.2"
   },
   "dependencies": {
+    "@babylonjs/gui": "^6.49.0",
+    "@babylonjs/loaders": "^6.49.0",
+    "@babylonjs/materials": "^6.49.0",
+    "babylonjs": "^8.26.1",
+    "babylonjs-loaders": "^8.26.1",
     "noa-engine": "^0.33.0",
     "pngjs": "^7.0.0"
   }
