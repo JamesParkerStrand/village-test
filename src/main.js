@@ -181,6 +181,9 @@ function checkClicking() {
 
     var citizenMesh = noa.entities.getMeshData(citizen).mesh;
 
+    console.log(noa.pick());
+    console.log(noa.entities.getPosition(playerEnt));
+
     // just a test for npc rotation;
     //var rotationToApply = getRotationTowards(center[0], center[2], charPos[0],charPos[2]);
 
@@ -248,6 +251,7 @@ var vel = [0,0,0];
 var rotation = 0;
 
 var meshedCitizen = noa.entities.getMeshData(citizen).mesh;
+
 var animatedCitizen = noa.entities.getPhysicsBody(citizen);
 
 function update(dt) {
@@ -265,6 +269,10 @@ function update(dt) {
         animatedCitizen.applyImpulse(vel);
     }
     texts.text = text;
+
+    if(t > 3350) {
+        t = 3351;
+    }
 
 
 
