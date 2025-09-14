@@ -212,7 +212,8 @@ function checkClicking() {
     console.log("World ray missed.");
     }
 
-    noa.rendering.addMeshToScene(box);
+    //noa.rendering.addMeshToScene(box);
+    box.dispose();
 
     // just a test for npc rotation;
     //var rotationToApply = getRotationTowards(center[0], center[2], charPos[0],charPos[2]);
